@@ -19,7 +19,7 @@ x=5
 y=-5
 indexr = 0
 
-
+# Shape object, holds all the shapes and method to draw them on the screen
 class shape():
     def __init__(self):
         self.shapes = {
@@ -98,6 +98,7 @@ def change_index(direction):
         if check_for_index(indexr+direction,y):
             indexr += direction
 
+# check if the blocks can move down 
 def check_for_index(index,h):
     if h-1 < len(matrix):
         for i in range(len(tetris.shapes[random_shape][index])):
@@ -105,22 +106,23 @@ def check_for_index(index,h):
                 if tetris.shapes[random_shape][index][i][j] == 1 and h+i < len(matrix):
                     if matrix[h+i][x+j] == 1:
                         return False
-    
     return True
 
+# draw the main matrix that holds blocks once they stop moving
 def draw_matrix():
     for mrow in reversed(range(len(matrix[0]))):
         for mcol in range(len(matrix)):
             if matrix[mcol][mrow] == 1:
                 pygame.draw.rect(window,(255,255,255),(mrow*cube_size,mcol*cube_size,cube_size-1,cube_size-2))
 
-
+# save the shape of blocks into matrix after they stop moving
 def set_matrix():
     for i in range(len(tetris.shapes[random_shape][indexr])):
         for j in range(len(tetris.shapes[random_shape][indexr][i])):
             if tetris.shapes[random_shape][indexr][i][j] ==1:
                 matrix[y+i][x+j] = tetris.shapes[random_shape][indexr][i][j]
 
+# check if the blocks can be moved left or right
 def check_horizontal(dx):
     global x,y
     if dx == -1:
@@ -132,7 +134,7 @@ def check_horizontal(dx):
             return False
     return True
 
-
+# inititate new block
 def new_block():
     global random_shape,block,x,y,indexr
     random_shape = random.choice(tetris_shapes)
@@ -141,6 +143,7 @@ def new_block():
     y=-5
     indexr = 0
 
+# check to see which keys are pressed to move the blocks or rotate them
 def check_pressed_keys():
     global x
     keys = pygame.key.get_pressed()
@@ -160,6 +163,7 @@ def check_pressed_keys():
             change_index(1)
             break
 
+# refactor matrix once an entire line is filled
 def refactor_matrix():
     global cols,matrix
     roww = 0
