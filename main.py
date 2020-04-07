@@ -19,6 +19,7 @@ x=5
 y=0
 indexr = 0
 
+
 class shape():
     def __init__(self):
         self.shapes = {
@@ -77,7 +78,7 @@ def grid():
 
 # rotate the shapes by changing the index
 def change_index(direction):
-    global indexr
+    global indexr,y
     max_index = 0
     if random_shape == 'L':
         max_index = 3
@@ -88,12 +89,36 @@ def change_index(direction):
     else:
         max_index = 1
     if indexr == max_index and direction == 1:
-        indexr = 0
+        if check_for_index(0,y):
+            indexr = 0
     elif indexr == 0 and direction == -1:
-        indexr = max_index
+        if check_for_index(max_index,y):
+            indexr = max_index
     else:
-        indexr += direction
+        if check_for_index(indexr+direction,y):
+            indexr += direction
 
+def check_for_index(index,h):
+    if h-1 < len(matrix):
+        for i in range(len(tetris.shapes[random_shape][index])):
+            for j in range(len(tetris.shapes[random_shape][index][i])):
+                if tetris.shapes[random_shape][index][i][j] == 1 and h+i < len(matrix):
+                    if matrix[h+i][x+j] == 1:
+                        return False
+    
+    return True
+
+def draw_matrix():
+    for mrow in reversed(range(len(matrix[0]))):
+        for mcol in range(len(matrix)):
+            if matrix[mcol][mrow] == 1:
+                pygame.draw.rect(window,(255,255,255),(mrow*cube_size,mcol*cube_size,cube_size-1,cube_size-2))
+
+
+def set_matrix():
+    for i in range(len(tetris.shapes[random_shape][indexr])):
+        for j in range(len(tetris.shapes[random_shape][indexr][i])):
+            matrix[y+i][x+j] = tetris.shapes[random_shape][indexr][i][j]
 
 tetris = shape()
 clock = pygame.time.Clock()
@@ -107,11 +132,13 @@ while game:
     keys = pygame.key.get_pressed()
     for _ in keys:
         if keys[pygame.K_RIGHT] and cols > x+len(tetris.shapes[random_shape][indexr][0]):
-            x +=1
-            break
+            if matrix[y][x+1] != 1:
+                x +=1
+                break
         elif keys[pygame.K_LEFT] and x>0:
-            x -= 1
-            break
+            if matrix[y][x-1] != 1:
+                x -= 1
+                break
         elif keys[pygame.K_UP]:
             change_index(-1)
             break
@@ -120,9 +147,25 @@ while game:
             break
     window.fill((0,0,0))
     grid()
+    draw_matrix()
     if not block:
         random_shape = random.choice(tetris_shapes)
         block = True
+        x=5
+        y=0
     tetris.draw(random_shape,[x,y],indexr)
-    pygame.time.wait(50)
+    if (not check_for_index(indexr,y+1)) or y == len(matrix)-1:
+        set_matrix()
+        print(matrix)
+        block=False
+    else:
+        if y < len(matrix) - len(tetris.shapes[random_shape][indexr]):
+            y+=1
+        else:
+            print('reached end')
+            set_matrix()
+            print(matrix)
+            block = False
+    
+    pygame.time.wait(80)
     pygame.display.update()
