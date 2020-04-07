@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 import random
 
+pygame.init()
 # game window and variables init
 
 width = 360
@@ -18,6 +19,13 @@ block = False
 x=5
 y=0
 indexr = 0
+score = 0
+pygame.font.init()
+# font for score and game over
+font =  pygame.font.Font('freesansbold.ttf', 24)
+white = (255, 255, 255) 
+green = (0, 255, 0) 
+blue = (0, 0, 128) 
 
 # Shape object, holds all the shapes and method to draw them on the screen
 class shape():
@@ -169,6 +177,7 @@ def refactor_matrix():
     roww = 0
     for row in reversed(range(len(matrix))):
         if matrix[row].all() == 1:
+            score += 1
             for roww in reversed(range(row)):
                 matrix[roww+1] = matrix[roww]
             matrix[0] = np.zeros((1,cols), dtype = int)
@@ -187,6 +196,10 @@ while game:
     window.fill((0,0,0))
     grid()
     draw_matrix()
+    text = font.render('Score is {}'.format(score), True, green)
+    textRect = text.get_rect()  
+    textRect.center = (width - 80, 10)
+    window.blit(text,textRect)
     if not block:
         new_block()
     tetris.draw(random_shape,[x,y],indexr)
