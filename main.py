@@ -16,7 +16,7 @@ tetris_shapes = ['L','S','C','|']
 random_shape = ''
 block = False
 x=5
-y=-5
+y=0
 indexr = 0
 
 # Shape object, holds all the shapes and method to draw them on the screen
@@ -140,7 +140,7 @@ def new_block():
     random_shape = random.choice(tetris_shapes)
     block = True
     x=5
-    y=-5
+    y=0
     indexr = 0
 
 # check to see which keys are pressed to move the blocks or rotate them
