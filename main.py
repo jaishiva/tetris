@@ -16,16 +16,19 @@ matrix = np.zeros((rows,cols),dtype = int)
 tetris_shapes = ['L','S','C','|']
 random_shape = ''
 block = False
-x=5
+x=8
 y=0
 indexr = 0
 score = 0
 pygame.font.init()
+running = True
 # font for score and game over
-font =  pygame.font.Font('freesansbold.ttf', 24)
+font =  pygame.font.Font('freesansbold.ttf', 30)
+font_gameover = pygame.font.Font('freesansbold.ttf', 16)
 white = (255, 255, 255) 
 green = (0, 255, 0) 
 blue = (0, 0, 128) 
+delay = 80
 
 # Shape object, holds all the shapes and method to draw them on the screen
 class shape():
@@ -77,11 +80,11 @@ class shape():
 # draw grid on window
 def grid():
     x = 0
-    y = 0
+    y = 3*cube_size
     for i in range(height//cube_size):
         x += cube_size
         y += cube_size
-        pygame.draw.line(window,(255,255,255),(x,0),(x,height))
+        pygame.draw.line(window,(255,255,255),(x,4*cube_size),(x,height))
         pygame.draw.line(window,(255,255,255),(0,y),(width,y))
 
 # rotate the shapes by changing the index
@@ -108,7 +111,7 @@ def change_index(direction):
 
 # check if the blocks can move down 
 def check_for_index(index,h):
-    if h-1 < len(matrix):
+    if h-1 < len(matrix)-len(tetris.shapes[random_shape][index]):
         for i in range(len(tetris.shapes[random_shape][index])):
             for j in range(len(tetris.shapes[random_shape][index][i])):
                 if tetris.shapes[random_shape][index][i][j] == 1 and h+i < len(matrix):
@@ -132,13 +135,17 @@ def set_matrix():
 
 # check if the blocks can be moved left or right
 def check_horizontal(dx):
-    global x,y
+    global x,y,tetris,random_shape,indexr
     if dx == -1:
         dy = 0
+        block_length = -1
     elif dx == 1:
         dy = -1
+        block_length = len(tetris.shapes[random_shape][indexr][0])
+
+    
     for i in range(len(tetris.shapes[random_shape][indexr])):
-        if matrix[y+i][x+dx] == 1 and tetris.shapes[random_shape][indexr][i][dy] ==1:
+        if matrix[y+i][x+block_length] == 1 and tetris.shapes[random_shape][indexr][i][dy] ==1:
             return False
     return True
 
@@ -147,7 +154,7 @@ def new_block():
     global random_shape,block,x,y,indexr
     random_shape = random.choice(tetris_shapes)
     block = True
-    x=5
+    x=8
     y=0
     indexr = 0
 
@@ -173,7 +180,7 @@ def check_pressed_keys():
 
 # refactor matrix once an entire line is filled
 def refactor_matrix():
-    global cols,matrix
+    global cols,matrix,score
     roww = 0
     for row in reversed(range(len(matrix))):
         if matrix[row].all() == 1:
@@ -182,37 +189,60 @@ def refactor_matrix():
                 matrix[roww+1] = matrix[roww]
             matrix[0] = np.zeros((1,cols), dtype = int)
 
+def check_gameover():
+    global matrix,running,rows,cols
+    if matrix[4][8] or matrix[4][9] or matrix[4][10] or matrix[3].any() == 1:
+        running = False
+
+def check_for_restart_press():
+    global running,matrix,score,x,y,rows,cols
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_SPACE]:
+        running = True
+        matrix = np.zeros((rows,cols),dtype = int)
+        score = 0
+        x= 8
+        y=0
+
+
 tetris = shape()
-clock = pygame.time.Clock()
-clock.tick(10)
+# clock = pygame.time.Clock()
+# clock.tick(50)
 
 # game loop and logic
 while game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
-
-    check_pressed_keys()
     window.fill((0,0,0))
-    grid()
-    draw_matrix()
-    text = font.render('Score is {}'.format(score), True, green)
-    textRect = text.get_rect()  
-    textRect.center = (width - 80, 10)
-    window.blit(text,textRect)
-    if not block:
-        new_block()
-    tetris.draw(random_shape,[x,y],indexr)
-    if (not check_for_index(indexr,y+1)) or y == len(matrix)-1:
-        set_matrix()
-        new_block()
-    else: 
-        if y < len(matrix) - len(tetris.shapes[random_shape][indexr]):
-            y+=1
-        else:
-            print('reached end')
+    if running:
+        check_pressed_keys()
+        grid()
+        draw_matrix()
+        text = font.render('Score is {}'.format(score), True, green)
+        textRect = text.get_rect()  
+        textRect.center = (width - 80, 20)
+        window.blit(text,textRect)
+        if not block:
+            new_block()
+        tetris.draw(random_shape,[x,y],indexr)
+        if (not check_for_index(indexr,y+1)) or y == len(matrix)-1:
             set_matrix()
             new_block()
-    refactor_matrix()
+        else: 
+            if y < len(matrix) - len(tetris.shapes[random_shape][indexr]):
+                y+=1
+            else:
+                print('reached end')
+                set_matrix()
+                new_block()
+        refactor_matrix()
+        check_gameover()
+    else:
+        check_for_restart_press()
+        text = font_gameover.render('Game Over Score is {} Press Space key to Restart'.format(score), True, green)
+        textRect = text.get_rect()  
+        textRect.center = (width/2, height/2)
+        window.blit(text,textRect)
     pygame.display.update()
-    pygame.time.wait(100)
+    pygame.time.wait(delay)
